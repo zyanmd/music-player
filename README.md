@@ -42,10 +42,12 @@ Project menggunakan struktur modular dengan pemisahan HTML, CSS, dan JavaScript 
 music-player/
 │
 ├── css/
+│   ├── ss.jpg                  # gambar preview
 │   └── style.css               # Stylesheet utama
 ├── js/
 │   ├── config.js               # Konfigurasi API dan pengaturan
 │   └── script.js               # File JavaScript utama
+├── LICENSE                     # Dokumentasi Project
 ├── index.html                  # File HTML utama
 └── README.md                   # Dokumentasi project
 ```
