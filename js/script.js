@@ -297,19 +297,18 @@ function updateRecentlyPlayed() {
  */
 function updateQueue() {
     queueList.innerHTML = '';
-    
-    // Show next songs in the queue up to the configured maximum
+
     for (let i = 0; i < APP_DEFAULTS.MAX_QUEUE_ITEMS; i++) {
         const nextIndex = (currentSongIndex + i + 1) % currentPlaylist.length;
-        if (nextIndex !== currentSongIndex) { // Don't show current song in the queue
+        if (nextIndex !== currentSongIndex) {
             const song = currentPlaylist[nextIndex];
-            
+
             const queueItem = document.createElement('div');
             queueItem.className = 'queue-item';
-            
-            // Check if title is too long
+            queueItem.dataset.index = i;
+
             const needsScrolling = UTILS.needsScrolling(song.title);
-            
+
             queueItem.innerHTML = `
                 <img src="${song.thumbnail}" alt="${song.title}" class="queue-thumbnail">
                 <div class="queue-info">
@@ -320,17 +319,16 @@ function updateQueue() {
                 </div>
                 <div class="queue-duration">${song.timestamp || '0:00'}</div>
             `;
-            
+
             queueItem.addEventListener('click', () => {
                 playSong(nextIndex);
                 updateQueue();
             });
-            
+
             queueList.appendChild(queueItem);
         }
     }
-    
-    // If there are no next songs, show message
+
     if (queueList.children.length === 0) {
         queueList.innerHTML = `
             <div class="no-results">
@@ -338,7 +336,55 @@ function updateQueue() {
             </div>
         `;
     }
+
+    makeQueueDraggable(); // Tambahkan ini
 }
+
+
+function makeQueueDraggable() {
+    const items = queueList.querySelectorAll('.queue-item');
+    
+    items.forEach((item, index) => {
+        item.setAttribute('draggable', true);
+        item.dataset.index = index;
+
+        item.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', e.target.dataset.index);
+            item.classList.add('dragging');
+        });
+
+        item.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            item.classList.add('drag-over');
+        });
+
+        item.addEventListener('dragleave', () => {
+            item.classList.remove('drag-over');
+        });
+
+        item.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const fromIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
+            const toIndex = parseInt(item.dataset.index, 10);
+
+            if (fromIndex !== toIndex) {
+                const from = currentSongIndex + 1 + fromIndex;
+                const to = currentSongIndex + 1 + toIndex;
+
+                // Reorder the currentPlaylist array
+                const movedItem = currentPlaylist.splice(from, 1)[0];
+                currentPlaylist.splice(to, 0, movedItem);
+
+                updateQueue(); // Refresh the queue UI
+            }
+        });
+
+        item.addEventListener('dragend', () => {
+            items.forEach(i => i.classList.remove('dragging', 'drag-over'));
+        });
+    });
+}
+
 
 /**
  * Toggles play/pause
